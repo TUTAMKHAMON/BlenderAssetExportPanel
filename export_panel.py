@@ -1,13 +1,13 @@
 bl_info = {
 	"name": "Unity Export",
-	"description": "A way to expedite the process of exporting multiple models to Unity.",
+	"description": "A way to expedite the process of exporting multiple groups of objects into separate files.",
 	"author": "João Ferreira (@TUTAMKHAMON)",
-	"version": (1, 2),
+	"version": (1, 3),
 	"blender": (2, 80, 0),
-	"location": "View3D > Sidebar > Unity Export",
+	"location": "View3D > Sidebar > Asset Exporter",
 	"support": "COMMUNITY",
-	"warning": "",  # if any major bug is detected, update with info
-	"doc_url": "",  # TODO: github url
+	"warning": "",  #TODO: if any major bug is detected, update with info
+	"doc_url": "https://github.com/TUTAMKHAMON/BlenderAssetExportPanel",
 	"category": "Import-Export",
 }
 
@@ -16,34 +16,34 @@ bl_info = {
 import bpy
 
 
-class UNITY_EXPORT_obj_list(bpy.types.PropertyGroup):
+class ASSET_EXPORT_obj_list(bpy.types.PropertyGroup):
 	obj: bpy.props.PointerProperty(type=bpy.types.Object)
 
 
-class UNITY_EXPORT_entry(bpy.types.PropertyGroup):
+class ASSET_EXPORT_entry(bpy.types.PropertyGroup):
 	name: bpy.props.StringProperty(name='Object name', default='Unnamed')
 	export: bpy.props.BoolProperty(name='Export boolean', default=True)
-	objs: bpy.props.CollectionProperty(type=UNITY_EXPORT_obj_list)
+	objs: bpy.props.CollectionProperty(type=ASSET_EXPORT_obj_list)
 
 
-class UNITY_EXPORT_data(bpy.types.PropertyGroup):
+class ASSET_EXPORT_data(bpy.types.PropertyGroup):
 	export_path: bpy.props.StringProperty(name='Export path', default='/')
 
 	selected_rendered: bpy.props.IntProperty(name='Render export group')
 	current_render_name: bpy.props.StringProperty(name='Render file name')
 	rendered_objs: bpy.props.CollectionProperty(
-		type=UNITY_EXPORT_entry,
+		type=ASSET_EXPORT_entry,
 		description='Unity Export: Rendered objects list')
 
 	selected_collision: bpy.props.IntProperty(name='Collision export group')
 	current_collision_name: bpy.props.StringProperty(name='Collision file name')
 	collision_objs: bpy.props.CollectionProperty(
-		type=UNITY_EXPORT_entry,
+		type=ASSET_EXPORT_entry,
 		description='Unity Export: Collision objects list')
 
 
-class UNITY_EXPORT_Add_Export(bpy.types.Operator):
-	bl_idname = 'ue.add_export'
+class ASSET_EXPORT_Add_Export(bpy.types.Operator):
+	bl_idname = 'tae.add_export'
 	bl_label = ''
 	bl_options = {'REGISTER'}
 
@@ -58,11 +58,11 @@ class UNITY_EXPORT_Add_Export(bpy.types.Operator):
 		obj = context.object
 
 		if self.list == 'render':
-			collection = bpy.context.scene.unity_export.rendered_objs
-			selected = bpy.context.scene.unity_export.selected_rendered
+			collection = bpy.context.scene.asset_export.rendered_objs
+			selected = bpy.context.scene.asset_export.selected_rendered
 		elif self.list == 'collision':
-			collection = bpy.context.scene.unity_export.collision_objs
-			selected = bpy.context.scene.unity_export.selected_collision
+			collection = bpy.context.scene.asset_export.collision_objs
+			selected = bpy.context.scene.asset_export.selected_collision
 		else:
 			return {'CANCELLED'}
 
@@ -78,8 +78,8 @@ class UNITY_EXPORT_Add_Export(bpy.types.Operator):
 		return {'FINISHED'}
 
 
-class UNITY_EXPORT_Remove_Export(bpy.types.Operator):
-	bl_idname = 'ue.remove_export'
+class ASSET_EXPORT_Remove_Export(bpy.types.Operator):
+	bl_idname = 'tae.remove_export'
 	bl_label = ''
 	bl_options = {'REGISTER'}
 
@@ -93,9 +93,9 @@ class UNITY_EXPORT_Remove_Export(bpy.types.Operator):
 	def execute(self, context):
 
 		if self.list == 'render':
-			collection = bpy.context.scene.unity_export.rendered_objs
+			collection = bpy.context.scene.asset_export.rendered_objs
 		elif self.list == 'collision':
-			collection = bpy.context.scene.unity_export.collision_objs
+			collection = bpy.context.scene.asset_export.collision_objs
 		else:
 			return {'CANCELLED'}
 
@@ -103,8 +103,8 @@ class UNITY_EXPORT_Remove_Export(bpy.types.Operator):
 		return {'FINISHED'}
 
 
-class UNITY_EXPORT_Select_Export(bpy.types.Operator):
-	bl_idname = 'ue.select_export'
+class ASSET_EXPORT_Select_Export(bpy.types.Operator):
+	bl_idname = 'tae.select_export'
 	bl_label = 'Select export'
 
 	index: bpy.props.IntProperty()
@@ -115,9 +115,9 @@ class UNITY_EXPORT_Select_Export(bpy.types.Operator):
 			obj.select_set(False)
 
 		if self.list == 'render':
-			collection = context.scene.unity_export.rendered_objs[self.index].objs
+			collection = context.scene.asset_export.rendered_objs[self.index].objs
 		elif self.list == 'collision':
-			collection = context.scene.unity_export.collision_objs[self.index].objs
+			collection = context.scene.asset_export.collision_objs[self.index].objs
 		else:
 			return {'CANCELLED'}
 
@@ -127,15 +127,15 @@ class UNITY_EXPORT_Select_Export(bpy.types.Operator):
 		return {'FINISHED'}
 
 
-class UNITY_EXPORT_UL_list(bpy.types.UIList):
+class ASSET_EXPORT_UL_list(bpy.types.UIList):
 	def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
 
 		if active_propname == 'selected_rendered':
 			list = 'render'
-			selected_idx = context.scene.unity_export.selected_rendered
+			selected_idx = context.scene.asset_export.selected_rendered
 		elif active_propname == 'selected_collision':
 			list = 'collision'
-			selected_idx = context.scene.unity_export.selected_collision
+			selected_idx = context.scene.asset_export.selected_collision
 
 		selected = selected_idx == index
 
@@ -151,7 +151,7 @@ class UNITY_EXPORT_UL_list(bpy.types.UIList):
 			# if selected:
 			# row.label(text='', icon='FILE_REFRESH')
 
-			op = row.operator(UNITY_EXPORT_Select_Export.bl_idname, text=str(item.objs.__len__()), emboss=False)
+			op = row.operator(ASSET_EXPORT_Select_Export.bl_idname, text=str(item.objs.__len__()), emboss=False)
 			op.index = index
 			op.list = list
 
@@ -160,9 +160,9 @@ class UNITY_EXPORT_UL_list(bpy.types.UIList):
 			layout.label(text="", icon='MESH_DATA')
 
 
-class UNITY_EXPORT_Choose_Folder(bpy.types.Operator):
+class ASSET_EXPORT_Choose_Folder(bpy.types.Operator):
 	"""Select save location"""
-	bl_idname = 'ue.choose_folder'
+	bl_idname = 'tae.choose_folder'
 	bl_label = 'Choose folder'
 
 	use_filter_folder = True
@@ -173,14 +173,14 @@ class UNITY_EXPORT_Choose_Folder(bpy.types.Operator):
 		return {'RUNNING_MODAL'}
 
 	def execute(self, context):
-		bpy.context.scene.unity_export.export_path = self.directory
+		bpy.context.scene.asset_export.export_path = self.directory
 		return {'FINISHED'}
 
 
 # from bpy_extras.io_utils import ExportHelper
-class UNITY_EXPORT_Export_Modal(bpy.types.Operator):
+class ASSET_EXPORT_Export_Modal(bpy.types.Operator):
 	"""Open export window dialog"""
-	bl_idname = "ue.select_path"
+	bl_idname = "tae.select_path"
 	bl_label = "Select save location"
 
 	use_filter_folder = True
@@ -198,13 +198,13 @@ class UNITY_EXPORT_Export_Modal(bpy.types.Operator):
 		row = col.row()
 		row.label(text="Rendered Meshes", icon='SHADING_RENDERED')
 		row.alignment = 'RIGHT'
-		row.label(text=str(sum(o.export == True for o in context.scene.unity_export.rendered_objs)) + '/' + str(
-			context.scene.unity_export.rendered_objs.keys().__len__()))
+		row.label(text=str(sum(o.export == True for o in context.scene.asset_export.rendered_objs)) + '/' + str(
+			context.scene.asset_export.rendered_objs.keys().__len__()))
 
 		col.template_list(
-			"UNITY_EXPORT_UL_list", "rendered",
-			bpy.context.scene.unity_export, 'rendered_objs',
-			bpy.context.scene.unity_export, 'selected_rendered')
+			"ASSET_EXPORT_UL_list", "rendered",
+			bpy.context.scene.asset_export, 'rendered_objs',
+			bpy.context.scene.asset_export, 'selected_rendered')
 
 		layout.separator(factor=2)
 
@@ -212,35 +212,35 @@ class UNITY_EXPORT_Export_Modal(bpy.types.Operator):
 		row = col.row()
 		row.label(text="Collision Meshes", icon='SHADING_WIRE')
 		row.alignment = 'RIGHT'
-		row.label(text=str(sum(o.export == True for o in context.scene.unity_export.collision_objs)) + '/' + str(
-			context.scene.unity_export.collision_objs.keys().__len__()))
+		row.label(text=str(sum(o.export == True for o in context.scene.asset_export.collision_objs)) + '/' + str(
+			context.scene.asset_export.collision_objs.keys().__len__()))
 
 		col.template_list(
-			"UNITY_EXPORT_UL_list", "collision",
-			bpy.context.scene.unity_export, 'collision_objs',
-			bpy.context.scene.unity_export, 'selected_collision')
+			"ASSET_EXPORT_UL_list", "collision",
+			bpy.context.scene.asset_export, 'collision_objs',
+			bpy.context.scene.asset_export, 'selected_collision')
 
 	def execute(self, context):
-		bpy.context.scene.unity_export.export_path = self.directory
-		bpy.ops.ue.export_all('INVOKE_DEFAULT')
+		bpy.context.scene.asset_export.export_path = self.directory
+		bpy.ops.tae.export_all('INVOKE_DEFAULT')
 		return {'FINISHED'}
 
 
-class UNITY_EXPORT_Export_All(bpy.types.Operator):
+class ASSET_EXPORT_Export_All(bpy.types.Operator):
 	"""Quick export to previous chosen path"""
-	bl_idname = "ue.export_all"
+	bl_idname = "tae.export_all"
 	bl_label = "Export all enabled"
 
 	bl_options = {'REGISTER'}
 
 	def execute(self, context):
-		filepath = bpy.context.scene.unity_export.export_path
+		filepath = bpy.context.scene.asset_export.export_path
 
-		r_objs = bpy.context.scene.unity_export.rendered_objs
+		r_objs = bpy.context.scene.asset_export.rendered_objs
 		for idx in range(r_objs.keys().__len__()):
 			exp = r_objs[idx]
 			if exp.export:
-				bpy.ops.ue.select_export(index=idx, list='render')
+				bpy.ops.tae.select_export(index=idx, list='render')
 				bpy.ops.export_scene.fbx(
 					filepath=filepath + 'RDR-' + exp.name + '.fbx',
 					check_existing=True,
@@ -253,11 +253,11 @@ class UNITY_EXPORT_Export_All(bpy.types.Operator):
 					use_mesh_modifiers=True,
 					bake_anim=False)
 
-		c_objs = bpy.context.scene.unity_export.collision_objs
+		c_objs = bpy.context.scene.asset_export.collision_objs
 		for idx in range(c_objs.keys().__len__()):
 			exp = c_objs[idx]
 			if exp.export:
-				bpy.ops.ue.select_export(index=idx, list='collision')
+				bpy.ops.tae.select_export(index=idx, list='collision')
 				offset = bpy.context.object.location.copy()
 				bpy.ops.transform.translate(value=-offset)
 
@@ -285,14 +285,14 @@ class UNITY_EXPORT_Export_All(bpy.types.Operator):
 		return {'FINISHED'}
 
 
-class UNITY_EXPORT_Panel(bpy.types.Panel):
+class ASSET_EXPORT_Panel(bpy.types.Panel):
 	"""Creates a Panel in the context menu in View3D"""
-	bl_idname = "TOOLS_PT_unity_export"
-	bl_label = "Batch export for Unity"
+	bl_idname = "TOOLS_PT_asset_export"
+	bl_label = "Batch exporter panel"
 	bl_space_type = 'VIEW_3D'
 	bl_region_type = 'UI'
 	bl_context = "objectmode"
-	bl_category = "Unity Export"
+	bl_category = "Asset Exporter"
 
 	# bl_options = {'HIDE_HEADER'}
 
@@ -306,22 +306,22 @@ class UNITY_EXPORT_Panel(bpy.types.Panel):
 		row = col.row()
 		row.label(text="Rendered Meshes", icon='SHADING_RENDERED')
 		row.alignment = 'RIGHT'
-		row.label(text=str(sum(o.export == True for o in context.scene.unity_export.rendered_objs)) + '/' + str(
-			context.scene.unity_export.rendered_objs.keys().__len__()))
+		row.label(text=str(sum(o.export == True for o in context.scene.asset_export.rendered_objs)) + '/' + str(
+			context.scene.asset_export.rendered_objs.keys().__len__()))
 
-		col.template_list("UNITY_EXPORT_UL_list", "rendered", bpy.context.scene.unity_export, 'rendered_objs',
-						  bpy.context.scene.unity_export, 'selected_rendered')
+		col.template_list("ASSET_EXPORT_UL_list", "rendered", bpy.context.scene.asset_export, 'rendered_objs',
+						  bpy.context.scene.asset_export, 'selected_rendered')
 
 		row = col.row(align=True)
-		row.prop(context.scene.unity_export, 'current_render_name', text="")
+		row.prop(context.scene.asset_export, 'current_render_name', text="")
 
-		op = row.operator(UNITY_EXPORT_Add_Export.bl_idname, icon='ADD', text="")
+		op = row.operator(ASSET_EXPORT_Add_Export.bl_idname, icon='ADD', text="")
 		op.list = 'render'
-		op.export_name = context.scene.unity_export.current_render_name
+		op.export_name = context.scene.asset_export.current_render_name
 
-		op = row.operator(UNITY_EXPORT_Remove_Export.bl_idname, icon='REMOVE', text="")
+		op = row.operator(ASSET_EXPORT_Remove_Export.bl_idname, icon='REMOVE', text="")
 		op.list = 'render'
-		op.del_index = context.scene.unity_export.selected_rendered
+		op.del_index = context.scene.asset_export.selected_rendered
 
 		##########################	
 
@@ -333,22 +333,22 @@ class UNITY_EXPORT_Panel(bpy.types.Panel):
 		row = col.row()
 		row.label(text="Collision Meshes", icon='SHADING_WIRE')
 		row.alignment = 'RIGHT'
-		row.label(text=str(sum(o.export == True for o in context.scene.unity_export.collision_objs)) + '/' + str(
-			context.scene.unity_export.collision_objs.keys().__len__()))
+		row.label(text=str(sum(o.export == True for o in context.scene.asset_export.collision_objs)) + '/' + str(
+			context.scene.asset_export.collision_objs.keys().__len__()))
 
-		col.template_list("UNITY_EXPORT_UL_list", "collision", bpy.context.scene.unity_export, 'collision_objs',
-						  bpy.context.scene.unity_export, 'selected_collision')
+		col.template_list("ASSET_EXPORT_UL_list", "collision", bpy.context.scene.asset_export, 'collision_objs',
+						  bpy.context.scene.asset_export, 'selected_collision')
 
 		row = col.row(align=True)
-		row.prop(context.scene.unity_export, 'current_collision_name', text="")
+		row.prop(context.scene.asset_export, 'current_collision_name', text="")
 
-		op = row.operator(UNITY_EXPORT_Add_Export.bl_idname, icon='ADD', text="")
+		op = row.operator(ASSET_EXPORT_Add_Export.bl_idname, icon='ADD', text="")
 		op.list = 'collision'
-		op.export_name = context.scene.unity_export.current_collision_name
+		op.export_name = context.scene.asset_export.current_collision_name
 
-		op = row.operator(UNITY_EXPORT_Remove_Export.bl_idname, icon='REMOVE', text="")
+		op = row.operator(ASSET_EXPORT_Remove_Export.bl_idname, icon='REMOVE', text="")
 		op.list = 'collision'
-		op.del_index = context.scene.unity_export.selected_rendered
+		op.del_index = context.scene.asset_export.selected_rendered
 
 		###########################	
 
@@ -365,46 +365,46 @@ class UNITY_EXPORT_Panel(bpy.types.Panel):
 
 		# col = layout.column(align=True)
 		# row = col.row(align=True)
-		# row.prop(context.scene.unity_export, 'export_path', text='')
-		# op = row.operator(UNITY_EXPORT_Choose_Folder.bl_idname, icon='FILE_FOLDER', text='')
+		# row.prop(context.scene.asset_export, 'export_path', text='')
+		# op = row.operator(ASSET_EXPORT_Choose_Folder.bl_idname, icon='FILE_FOLDER', text='')
 		# row = col.row(align=True)
-		# row.enabled = context.scene.unity_export.export_path != ''
-		# op = row.operator(UNITY_EXPORT_Export_All.bl_idname, icon='EXPORT', text='Export All')
+		# row.enabled = context.scene.asset_export.export_path != ''
+		# op = row.operator(ASSET_EXPORT_Export_All.bl_idname, icon='EXPORT', text='Export All')
 
 		col = layout.column()
 		row = col.row(align=True)
-		op = row.operator(UNITY_EXPORT_Export_Modal.bl_idname, icon='FILEBROWSER', text='Export As')
-		op = row.operator(UNITY_EXPORT_Export_All.bl_idname, icon='EXPORT', text='')
+		op = row.operator(ASSET_EXPORT_Export_Modal.bl_idname, icon='FILEBROWSER', text='Export As')
+		op = row.operator(ASSET_EXPORT_Export_All.bl_idname, icon='EXPORT', text='')
 
 
 def register():
-	bpy.utils.register_class(UNITY_EXPORT_obj_list)
-	bpy.utils.register_class(UNITY_EXPORT_entry)
-	bpy.utils.register_class(UNITY_EXPORT_data)
-	bpy.types.Scene.unity_export = bpy.props.PointerProperty(type=UNITY_EXPORT_data)
+	bpy.utils.register_class(ASSET_EXPORT_obj_list)
+	bpy.utils.register_class(ASSET_EXPORT_entry)
+	bpy.utils.register_class(ASSET_EXPORT_data)
+	bpy.types.Scene.asset_export = bpy.props.PointerProperty(type=ASSET_EXPORT_data)
 
-	bpy.utils.register_class(UNITY_EXPORT_Add_Export)
-	bpy.utils.register_class(UNITY_EXPORT_Remove_Export)
-	bpy.utils.register_class(UNITY_EXPORT_Select_Export)
-	bpy.utils.register_class(UNITY_EXPORT_Choose_Folder)
+	bpy.utils.register_class(ASSET_EXPORT_Add_Export)
+	bpy.utils.register_class(ASSET_EXPORT_Remove_Export)
+	bpy.utils.register_class(ASSET_EXPORT_Select_Export)
+	bpy.utils.register_class(ASSET_EXPORT_Choose_Folder)
 
-	bpy.utils.register_class(UNITY_EXPORT_UL_list)
-	bpy.utils.register_class(UNITY_EXPORT_Export_Modal)
-	bpy.utils.register_class(UNITY_EXPORT_Export_All)
-	bpy.utils.register_class(UNITY_EXPORT_Panel)
+	bpy.utils.register_class(ASSET_EXPORT_UL_list)
+	bpy.utils.register_class(ASSET_EXPORT_Export_Modal)
+	bpy.utils.register_class(ASSET_EXPORT_Export_All)
+	bpy.utils.register_class(ASSET_EXPORT_Panel)
 
 
 def unregister():
-	bpy.utils.unregister_class(UNITY_EXPORT_obj_list)
-	bpy.utils.unregister_class(UNITY_EXPORT_entry)
-	bpy.utils.unregister_class(UNITY_EXPORT_data)
+	bpy.utils.unregister_class(ASSET_EXPORT_obj_list)
+	bpy.utils.unregister_class(ASSET_EXPORT_entry)
+	bpy.utils.unregister_class(ASSET_EXPORT_data)
 
-	bpy.utils.unregister_class(UNITY_EXPORT_Add_Export)
-	bpy.utils.unregister_class(UNITY_EXPORT_Remove_Export)
-	bpy.utils.unregister_class(UNITY_EXPORT_Select_Export)
-	bpy.utils.unregister_class(UNITY_EXPORT_Choose_Folder)
+	bpy.utils.unregister_class(ASSET_EXPORT_Add_Export)
+	bpy.utils.unregister_class(ASSET_EXPORT_Remove_Export)
+	bpy.utils.unregister_class(ASSET_EXPORT_Select_Export)
+	bpy.utils.unregister_class(ASSET_EXPORT_Choose_Folder)
 
-	bpy.utils.unregister_class(UNITY_EXPORT_UL_list)
-	bpy.utils.unregister_class(UNITY_EXPORT_Export_Modal)
-	bpy.utils.unregister_class(UNITY_EXPORT_Export_All)
-	bpy.utils.unregister_class(UNITY_EXPORT_Panel)
+	bpy.utils.unregister_class(ASSET_EXPORT_UL_list)
+	bpy.utils.unregister_class(ASSET_EXPORT_Export_Modal)
+	bpy.utils.unregister_class(ASSET_EXPORT_Export_All)
+	bpy.utils.unregister_class(ASSET_EXPORT_Panel)
